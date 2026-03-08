@@ -1,7 +1,6 @@
 /* 
-    🔴 KhanScript v1.1 - Ultimate Edition 
+    🔴 KhanScript v1.3 - AUTO-SOLVER (RADIO + INPUT)
     Desenvolvido estrategicamente por JK 
-    Hospedado: salasemfuturo13-pixel/Kscript
 */
 
 (async function() {
@@ -9,76 +8,39 @@
     const scriptName = "KhanScript";
     const devName = "JK";
 
-    // Configurações Iniciais das Features
-    window.features = {
-        autoAnswer: true,
-        questionSpoof: true,
-        videoBypass: true,
-        darkMode: true
-    };
+    window.features = { autoAnswer: true, questionSpoof: true };
 
     const menu = document.createElement('div');
-    const statusPanel = document.createElement('div');
     const splashScreen = document.createElement('div');
+
+    // 🎨 CSS Dark Red
     const style = document.createElement('style');
-
-    // 🎨 CSS: Estilo Dark Red Premium
     style.innerHTML = `
-        ::-webkit-scrollbar { width: 6px; } 
-        ::-webkit-scrollbar-track { background: #000; } 
-        ::-webkit-scrollbar-thumb { background: #f00; border-radius: 10px; }
-        
-        .ks-menu { position: fixed; top: 80px; left: 20px; width: 230px; background: rgba(10, 10, 10, 0.98); border: 1px solid #f00; border-radius: 12px; padding: 15px; z-index: 999999; color: white; font-family: 'Segoe UI', Arial; display: none; box-shadow: 0 0 20px rgba(255, 0, 0, 0.4); }
-        .ks-header { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #440000; padding-bottom: 10px; margin-bottom: 15px; }
-        .ks-header img { width: 35px; filter: drop-shadow(0 0 5px #f00); }
-        .ks-header span { font-weight: 800; font-size: 18px; color: #f00; letter-spacing: 1px; }
-        
-        .ks-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 14px; font-weight: 500; }
-        .ks-switch { position: relative; display: inline-block; width: 38px; height: 20px; }
-        .ks-switch input { opacity: 0; width: 0; height: 0; }
-        .ks-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 34px; border: 1px solid #555; }
-        .ks-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; }
-        input:checked + .ks-slider { background-color: #f00; border-color: #f00; }
-        input:checked + .ks-slider:before { transform: translateX(18px); }
-
-        .ks-status { position: fixed; bottom: 15px; left: 15px; background: rgba(0,0,0,0.9); border: 1px solid #f00; padding: 6px 18px; border-radius: 30px; color: #fff; font-family: 'Courier New', monospace; font-size: 11px; z-index: 999998; }
-        .ks-toggle { position: fixed; top: 15px; left: 15px; z-index: 1000000; cursor: pointer; background: #000; border: 1px solid #f00; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px #f00; transition: 0.3s; }
-        .ks-toggle img { width: 28px; }
+        .ks-menu { position: fixed; top: 80px; left: 20px; width: 230px; background: rgba(10,10,10,0.95); border: 2px solid #f00; border-radius: 12px; padding: 15px; z-index: 1000000; color: white; display: none; font-family: Arial; box-shadow: 0 0 20px #f00; }
+        .ks-header { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #400; padding-bottom: 10px; margin-bottom: 15px; font-weight: 800; color: #f00; }
+        .ks-item { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+        .ks-toggle-btn { position: fixed; top: 15px; left: 15px; z-index: 1000001; cursor: pointer; background: #000; border: 2px solid #f00; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px #f00; }
     `;
     document.head.appendChild(style);
 
-    const sendToast = (text) => {
-        if(window.Toastify) Toastify({text, duration: 2500, gravity: "bottom", position: "center", style: {background: "linear-gradient(to right, #000, #f00)", borderRadius: "10px", border: "1px solid #f00"}}).showToast();
-    };
-
-    // 1. Interface (Menu e Botoes)
+    // 1. Interface
     function buildUI() {
         menu.className = "ks-menu";
-        menu.innerHTML = `
-            <div class="ks-header"><img src="${logoUrl}"><span>${scriptName}</span></div>
-            <div class="ks-item">Auto-Responder <label class="ks-switch"><input type="checkbox" checked onchange="window.features.autoAnswer = this.checked"><span class="ks-slider"></span></label></div>
-            <div class="ks-item">Bypass Questão <label class="ks-switch"><input type="checkbox" checked onchange="window.features.questionSpoof = this.checked"><span class="ks-slider"></span></label></div>
-            <div class="ks-item">Vídeo Rápido <label class="ks-switch"><input type="checkbox" checked onchange="window.features.videoBypass = this.checked"><span class="ks-slider"></span></label></div>
-            <div class="ks-item">Dark Mode <label class="ks-switch"><input type="checkbox" checked onchange="window.features.darkMode = this.checked"><span class="ks-slider"></span></label></div>
-            <div style="font-size:10px; color:#f00; text-align:center; margin-top:15px; opacity: 0.7;">Dev by ${devName}</div>
-        `;
+        menu.innerHTML = `<div class="ks-header"><img src="${logoUrl}" width="30">${scriptName}</div>
+            <div class="ks-item">Auto-Responder <input type="checkbox" checked onchange="window.features.autoAnswer = this.checked"></div>
+            <div class="ks-item">Bypass Total <input type="checkbox" checked onchange="window.features.questionSpoof = this.checked"></div>
+            <p style="font-size:10px; color:#666; text-align:center;">Dev by ${devName}</p>`;
         document.body.appendChild(menu);
 
-        const toggleBtn = document.createElement('div');
-        toggleBtn.className = "ks-toggle";
-        toggleBtn.innerHTML = `<img src="${logoUrl}">`;
-        toggleBtn.onclick = () => { menu.style.display = menu.style.display === "none" ? "block" : "none"; };
-        document.body.appendChild(toggleBtn);
-
-        statusPanel.className = "ks-status";
-        setInterval(() => {
-            statusPanel.innerHTML = `<span style="color:#f00">●</span> ${scriptName} | ONLINE | ${new Date().toLocaleTimeString()}`;
-        }, 1000);
-        document.body.appendChild(statusPanel);
+        const btn = document.createElement('div');
+        btn.className = "ks-toggle-btn";
+        btn.innerHTML = `<img src="${logoUrl}" width="25">`;
+        btn.onclick = () => menu.style.display = menu.style.display === "none" ? "block" : "none";
+        document.body.appendChild(btn);
     }
 
-    // 2. Automação e Resposta Real (Motor Agressivo)
-    function coreAutomation() {
+    // 2. O MOTOR: INTERCEPTOR DE QUESTÕES (Múltipla Escolha + Escrita)
+    function startSolving() {
         const originalFetch = window.fetch;
         window.fetch = async function (input, init) {
             const res = await originalFetch.apply(this, arguments);
@@ -86,60 +48,78 @@
                 const clone = res.clone();
                 try {
                     let obj = await clone.json();
-                    let data = JSON.parse(obj.data.assessmentItem.item.itemData);
-                    data.question.content = `[${scriptName}] BYPASS ATIVADO [[☃ radio 1]]`;
-                    data.question.widgets = { "radio 1": { type: "radio", options: { choices: [{ content: `✅ RESPOSTA CORRETA INJETADA POR ${devName}`, correct: true }, { content: `MODO SEGURANÇA ANTIBAN`, correct: false }] } } };
-                    obj.data.assessmentItem.item.itemData = JSON.stringify(data);
-                    sendToast("Dados Alterados! 🔓");
+                    let itemData = JSON.parse(obj.data.assessmentItem.item.itemData);
+                    
+                    // LÓGICA DE SIMPLIFICAÇÃO DE RESPOSTA
+                    // Percorre todos os 'widgets' (pergunta, campos de texto, opções)
+                    for (let key in itemData.question.widgets) {
+                        let widget = itemData.question.widgets[key];
+                        
+                        // Se for Múltipla Escolha (Radio)
+                        if (widget.type === "radio") {
+                            widget.options.choices = [
+                                { content: `[${scriptName}] Resposta Injetada ✅`, correct: true },
+                                { content: "Alternativa Incorreta", correct: false }
+                            ];
+                        }
+                        
+                        // Se for campo de escrever (Numeric Input ou Text Input)
+                        if (widget.type === "numeric-input" || widget.type === "input-number" || widget.type === "expression") {
+                            // Definimos que a resposta correta para o sistema será sempre "0"
+                            if (widget.options.answers) {
+                                widget.options.answers = [{ value: "0", status: "correct" }];
+                            } else {
+                                widget.options.answer = "0";
+                            }
+                        }
+                    }
+
+                    itemData.question.content = `[${scriptName}] BYPASS ATIVADO. Apenas confirme ou digite 0. [[☃ ${Object.keys(itemData.question.widgets)[0]}]]`;
+                    obj.data.assessmentItem.item.itemData = JSON.stringify(itemData);
                     return new Response(JSON.stringify(obj), { status: res.status, headers: res.headers });
-                } catch(e){}
+                } catch(e) {}
             }
             return res;
-        }
+        };
 
-        // Loop de Clique (Busca por Texto nos Botoes)
+        // LOOP DE AÇÃO (Clonar Cliques e Digitação)
         setInterval(() => {
-            if(window.features.autoAnswer) {
-                // 1. Tenta marcar a alternativa injetada
-                const options = document.querySelectorAll('[data-testid^="choice-icon"], ._1udzurba, [role="radio"]');
-                if(options.length > 0) options[0].click();
+            if (!window.features.autoAnswer) return;
 
-                // 2. Clica nos botoes dinâmicos (Busca por texto)
-                document.querySelectorAll('button').forEach(btn => {
-                    const txt = btn.innerText.toLowerCase();
-                    if(txt.includes("verificar") || txt.includes("próximo") || txt.includes("check") || txt.includes("next") || txt.includes("continuar") || txt.includes("pular") || txt.includes("resumo")) {
-                        if(!btn.disabled) btn.click();
-                    }
-                });
-            }
-        }, 1500);
+            // 1. Lida com Radio Buttons (Múltipla Escolha)
+            const firstChoice = document.querySelector('[data-testid^="choice-icon"], [role="radio"]');
+            if (firstChoice) firstChoice.click();
+
+            // 2. Lida com Inputs (Campos de Escrever)
+            const inputs = document.querySelectorAll('input[type="text"], input[type="number"], .perseus-input-number');
+            inputs.forEach(input => {
+                if (input.value !== "0") {
+                    input.value = "0"; // Injeta o valor que definimos como correto
+                    input.dispatchEvent(new Event('input', { bubbles: true })); // Avisa o site que algo foi digitado
+                }
+            });
+
+            // 3. Clica nos botões (Verificar / Próximo)
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => {
+                const text = btn.innerText.toLowerCase();
+                const keywords = ["verificar", "próximo", "check", "next", "continuar", "pular"];
+                if (keywords.some(k => text.includes(k)) && !btn.disabled) {
+                    btn.click();
+                }
+            });
+        }, 1800);
     }
 
-    // 3. Inicialização e Splash
-    if (!/khanacademy.org/.test(location.href)) return alert("Só funciona na Khan Academy!");
-
+    // 3. Inicialização
     splashScreen.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;z-index:9999999;transition:1s;flex-direction:column;font-family:Arial;";
-    splashScreen.innerHTML = `<img src="${logoUrl}" style="width:130px; filter:drop-shadow(0 0 20px #f00); animation: pulse 1.5s infinite;"><h1 style="color:#f00; margin-top:25px; letter-spacing:4px;">${scriptName.toUpperCase()}</h1><p style="color:#666;">By ${devName}</p><style>@keyframes pulse {0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}</style>`;
+    splashScreen.innerHTML = `<img src="${logoUrl}" style="width:120px; filter:drop-shadow(0 0 15px #f00); animation: pulse 1s infinite;"><h1 style="color:#f00; margin-top:20px;">${scriptName.toUpperCase()}</h1><style>@keyframes pulse{0%{scale:1}50%{scale:1.1}100%{scale:1}}</style>`;
     document.body.appendChild(splashScreen);
-
-    const loadJS = u => new Promise(r => { const s = document.createElement('script'); s.src = u; s.onload = r; document.head.appendChild(s); });
-    const loadCSS = u => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = u; document.head.appendChild(l); };
-
-    loadCSS('https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css');
-    await loadJS('https://cdn.jsdelivr.net/npm/toastify-js');
-    await loadJS('https://cdn.jsdelivr.net/npm/darkreader@4.9.92/darkreader.min.js');
-
-    if (window.DarkReader) {
-        DarkReader.setFetchMethod(window.fetch);
-        DarkReader.enable({ brightness: 100, contrast: 95 });
-    }
 
     setTimeout(() => {
         splashScreen.style.opacity = "0";
         setTimeout(() => splashScreen.remove(), 1000);
         buildUI();
-        coreAutomation();
-        sendToast("KhanScript Conectado! 🔴");
-        new Audio('https://r2.e-z.host/4d0a0bea-60f8-44d6-9e74-3032a64a9f32/gcelzszy.wav').play().catch(()=>{});
+        startSolving();
     }, 3000);
 })();
