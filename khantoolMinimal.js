@@ -55,7 +55,7 @@ function setupMain(){
 (function () {
 const phrases = [
 "KhanTool: Aprenda no azul!",
-"KhanTool – entre para a comunidade: https://discord.gg/tdy2jCWja2",
+"KhanTool – entre para a comunidade: https://discord.gg/h5j2NyfFCx",
 "Dominando a Khan Academy — KhanTool.",
 "Avance suas conquistas com KhanTool.",
 "Mais poder, mais azul: KhanTool oficial.",
@@ -148,7 +148,7 @@ window.khanwareDominates = true;
 })()
 })();
 }
-if (!/^https?:\/\/([a-z0-9-]+\.)?khanacademy\.org/.test(window.location.href)) { alert("KhanTool só pode ser executado na Khan Academy: https://pt.khanacademy.org/"); window.location.href = "https://pt.khanacademy.org/"; }
+if (!/^https?:\/\/([a-z0-9-]+\.)?khanacademy\.org/.test(window.location.href)) { alert("Khanscript só pode ser executado na Khan Academy: https://pt.khanacademy.org/"); window.location.href = "https://pt.khanacademy.org/"; }
 showSplashScreen();
 loadScript('https://cdn.jsdelivr.net/npm/darkreader@4.9.92/darkreader.min.js', 'darkReaderPlugin')
     .then(()=>{ DarkReader.setFetchMethod(window.fetch); DarkReader.enable({brightness:105, contrast:109, sepia:0, grayscale:0, blue:85 }); })
