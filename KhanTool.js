@@ -1,6 +1,6 @@
 /* 
-    🔴 KhanScript v1.5 - INVISÍVEL & INFALÍVEL
-    Capta a resposta real do tráfego de dados sem usar dicas.
+    🔴 KhanScript v1.6 - REACT EMULATOR (AUTO-RESPONSE REAL)
+    Capta a resposta do servidor e simula interação humana no React.
     Desenvolvido estrategicamente por JK 
 */
 
@@ -10,117 +10,93 @@
     const devName = "JK";
 
     window.features = { autoAnswer: true };
-    window.lastCapturedAnswer = null;
+    window.currentAnswer = null;
 
-    // 1. O Cérebro: Interceptação de Dados em Tempo Real
+    // 1. INTERCEPTADOR DE DADOS (Pega a resposta real no tráfego)
     const originalFetch = window.fetch;
-    window.fetch = async function (input, init) {
+    window.fetch = async function () {
         const response = await originalFetch.apply(this, arguments);
-        
-        // Verifica se é o pacote de dados da questão
-        if (input.url && input.url.includes("getAssessmentItem")) {
+        if (arguments[0] && arguments[0].includes("getAssessmentItem")) {
             const clone = response.clone();
             clone.json().then(obj => {
                 try {
                     const itemData = JSON.parse(obj.data.assessmentItem.item.itemData);
-                    window.lastCapturedAnswer = null;
-
-                    // Procura a resposta dentro de qualquer tipo de widget (Radio ou Input)
+                    window.currentAnswer = null;
                     for (let key in itemData.question.widgets) {
                         const widget = itemData.question.widgets[key];
-                        
-                        // Caso 1: Múltipla Escolha (Radio)
-                        if (widget.options && widget.options.choices) {
-                            window.lastCapturedAnswer = {
-                                type: 'radio',
-                                index: widget.options.choices.findIndex(c => c.correct)
-                            };
+                        // Resposta de Múltipla Escolha
+                        if (widget.options?.choices) {
+                            window.currentAnswer = { type: 'radio', value: widget.options.choices.findIndex(c => c.correct) };
                         }
-                        
-                        // Caso 2: Digitar (Numeric Input / Expression)
-                        if (widget.options && widget.options.answers) {
-                            window.lastCapturedAnswer = {
-                                type: 'input',
-                                value: widget.options.answers[0].value
-                            };
-                        } else if (widget.options && widget.options.answer) {
-                            window.lastCapturedAnswer = {
-                                type: 'input',
-                                value: widget.options.answer
-                            };
+                        // Resposta de Escrever (Texto ou Número)
+                        if (widget.options?.answers) {
+                            window.currentAnswer = { type: 'input', value: widget.options.answers[0].value };
+                        } else if (widget.options?.answer) {
+                            window.currentAnswer = { type: 'input', value: widget.options.answer };
                         }
                     }
-                    console.log(`[${scriptName}] Resposta capturada do servidor! 🔴`);
+                    console.log(`[${scriptName}] Resposta capturada: `, window.currentAnswer);
                 } catch(e) {}
             });
         }
         return response;
     };
 
-    // 2. O Mão na Massa: Execução Automática
-    function runAutoBot() {
-        setInterval(() => {
-            if (!window.features.autoAnswer || !window.lastCapturedAnswer) return;
+    // 2. EMULADOR DE INTERAÇÃO (Faz o site aceitar a resposta)
+    function simulateInteraction() {
+        if (!window.features.autoAnswer || !window.currentAnswer) return;
 
-            // Se for Múltipla Escolha: Procura o ícone e clica no índice certo
-            if (window.lastCapturedAnswer.type === 'radio') {
-                const choices = document.querySelectorAll('[data-testid^="choice-icon"], [role="radio"], ._1udzurba');
-                if (choices[window.lastCapturedAnswer.index]) {
-                    choices[window.lastCapturedAnswer.index].click();
-                }
+        // Caso seja de clicar (Radio)
+        if (window.currentAnswer.type === 'radio') {
+            const choices = document.querySelectorAll('[data-testid^="choice-icon"], font-size: 0');
+            if (choices[window.currentAnswer.value]) {
+                choices[window.currentAnswer.value].click();
             }
+        }
 
-            // Se for de Escrever: Localiza o input e injeta o valor real
-            if (window.lastCapturedAnswer.type === 'input') {
-                const inputs = document.querySelectorAll('input[type="text"], input[type="number"], .perseus-input-number, textarea');
-                inputs.forEach(input => {
-                    if (input.value !== window.lastCapturedAnswer.value) {
-                        input.value = window.lastCapturedAnswer.value;
-                        input.dispatchEvent(new Event('input', { bubbles: true }));
-                    }
-                });
-            }
-
-            // Clica no botão de Verificar/Próximo (Leitura Dinâmica de Texto)
-            const buttons = document.querySelectorAll('button');
-            buttons.forEach(btn => {
-                const text = btn.innerText.toLowerCase();
-                const keywords = ["verificar", "próximo", "check", "next", "continuar", "pular", "resumo"];
-                if (keywords.some(k => text.includes(k)) && !btn.disabled) {
-                    btn.click();
+        // Caso seja de escrever (Input)
+        if (window.currentAnswer.type === 'input') {
+            const inputs = document.querySelectorAll('input[type="text"], input[type="number"], .perseus-input-number, textarea');
+            inputs.forEach(input => {
+                if (input.value !== String(window.currentAnswer.value)) {
+                    // O SEGREDO: Simular a alteração interna do React
+                    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+                    nativeInputValueSetter.call(input, window.currentAnswer.value);
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             });
-        }, 1800);
+        }
+
+        // Clica no botão de Verificar/Próximo
+        const btns = document.querySelectorAll('button');
+        btns.forEach(btn => {
+            const txt = btn.innerText.toLowerCase();
+            const keywords = ["verificar", "próximo", "check", "next", "continuar", "pular", "resumo"];
+            if (keywords.some(k => txt.includes(k)) && !btn.disabled) {
+                btn.click();
+            }
+        });
     }
 
-    // 3. UI Vermelha e Splash
-    const style = document.createElement('style');
-    style.innerHTML = `
-        .ks-menu { position: fixed; top: 15px; left: 15px; width: 230px; background: rgba(0,0,0,0.9); border: 2px solid #f00; border-radius: 10px; padding: 12px; z-index: 9999999; color: #fff; font-family: sans-serif; box-shadow: 0 0 15px #f00; display: none; }
-        .ks-toggle { position: fixed; top: 15px; left: 15px; width: 45px; height: 45px; background: #000; border: 2px solid #f00; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10000000; cursor: pointer; box-shadow: 0 0 10px #f00; }
-    `;
-    document.head.appendChild(style);
-
+    // 3. UI E INICIALIZADOR
     const splash = document.createElement('div');
-    splash.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;z-index:99999999;flex-direction:column;";
-    splash.innerHTML = `<img src="${logoUrl}" style="width:120px; filter:drop-shadow(0 0 15px #f00);"><h1 style="color:#f00; font-family:Arial; margin-top:20px;">KHANSCRIPT BY JK</h1>`;
+    splash.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;z-index:999999;flex-direction:column;font-family:Arial;";
+    splash.innerHTML = `<img src="${logoUrl}" style="width:120px; filter:drop-shadow(0 0 15px #f00); animation: pulse 1s infinite;"><h1 style="color:#f00; margin-top:20px;">${scriptName.toUpperCase()}</h1><p style="color:#666">By ${devName}</p><style>@keyframes pulse{0%{scale:1}50%{scale:1.1}100%{scale:1}}</style>`;
     document.body.appendChild(splash);
 
     setTimeout(() => {
         splash.remove();
-        const menu = document.createElement('div');
-        menu.className = "ks-menu";
-        menu.innerHTML = `<h3 style="color:#f00; margin:0 0 10px 0; text-align:center;">${scriptName}</h3>
-                          <label style="font-size:12px;"><input type="checkbox" checked onchange="window.features.autoAnswer = this.checked"> Auto-Responder Real</label>
-                          <hr style="border:0.5px solid #300;"><p style="font-size:10px; text-align:center;">Desenvolvido por JK</p>`;
-        document.body.appendChild(menu);
-
+        // Menu de toggle (Pequeno)
         const btn = document.createElement('div');
-        btn.className = "ks-toggle"; btn.innerHTML = `<img src="${logoUrl}" width="25">`;
-        btn.onclick = () => menu.style.display = menu.style.display === "none" ? "block" : "none";
+        btn.style = "position:fixed; top:15px; left:15px; width:45px; height:45px; background:#000; border:2px solid #f00; border-radius:50%; z-index:100000; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 0 10px #f00;";
+        btn.innerHTML = `<img src="${logoUrl}" width="25">`;
+        btn.onclick = () => { window.features.autoAnswer = !window.features.autoAnswer; btn.style.borderColor = window.features.autoAnswer ? "#f00" : "#555"; };
         document.body.appendChild(btn);
 
-        runAutoBot();
-    }, 2500);
+        // Loop de execução agressiva
+        setInterval(simulateInteraction, 1500);
+        console.log(`[${scriptName}] Ativado por ${devName}`);
+    }, 3000);
 
 })();
