@@ -3,7 +3,7 @@
 
 🙂 Bookmarklet:
 ```js
-javascript:fetch("...").then(t=>t.text()).then(eval);
+javascript:fetch("https://raw.githubusercontent.com/salasemfuturo13-pixel/Kscript/refs/heads/main/Kscript").then(t=>t.text()).then(eval);
 ```
 
 
