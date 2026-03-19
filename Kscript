@@ -1,6 +1,6 @@
 /*
     KScript V1.0 - Desenvolvido por JK
-    Tema: Deep Black & Red Edition (Full Override)
+    Tema: TOTAL BLACK & RED OVERRIDE
 */
 
 (async function() {
@@ -8,140 +8,117 @@
     let isDev = false;
 
     // --- CONFIGURAÇÕES JK ---
-    // Sua logo personalizada
     const logoJK = "https://github.com/salasemfuturo13-pixel/Kscript/blob/main/logo.png?raw=true";
     const repoPathDefault = `https://raw.githubusercontent.com/nickzplayerzx/KhanScript/${isDev ? "dev" : "main"}/`;
 
-    let user = { nickname: "Estudante" };
     const splashScreen = document.createElement('div');
 
-    // --- ESTILIZAÇÃO CSS (SOBRESCREVENDO O SITE E O MENU) ---
-    const styleElement = document.createElement("style");
-    styleElement.innerHTML = `
-        /* Fundo da Página e Scroll */
-        body { background-color: #000000 !important; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #000 !important; }
-        ::-webkit-scrollbar-thumb { background: #ff0000 !important; border-radius: 10px !important; }
-
-        /* FORÇAR MENU PRETO E VERMELHO */
-        #menu-container, div[class*="Menu"], .main-menu, [id*="stats-panel"] { 
-            background: #000000 !important; 
-            border: 2px solid #ff0000 !important;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.6) !important;
-            border-radius: 12px !important;
-            color: #ffffff !important;
+    // --- BLOCO DE SOBREPOSIÇÃO TOTAL (CSS) ---
+    const forceStyle = document.createElement("style");
+    forceStyle.innerHTML = `
+        /* Fundo da Página Totalmente Preto */
+        html, body, #ka-site-errored-container, #wp-content, .light-background { 
+            background-color: #000000 !important; 
+            background: #000000 !important;
         }
 
-        /* SUBSTITUIR ROXO POR VERMELHO NOS BOTÕES (TOGGLES) */
-        input:checked + .slider, 
-        .switch input:checked + div, 
-        [style*="background-color: rgb(154, 126, 217)"],
-        [style*="background-color: rgb(106, 53, 217)"] {
+        /* Mudar TUDO que for Roxo da Khan Academy para Vermelho */
+        /* Barras de progresso e elementos roxos */
+        div[style*="background-color: rgb(154, 126, 217)"], 
+        div[style*="background: rgb(154, 126, 217)"],
+        span[style*="background: rgb(154, 126, 217)"],
+        .progress-bar, [class*="progress"] div { 
+            background-color: #ff0000 !important; 
+            background: #ff0000 !important;
+        }
+
+        /* Texto roxo vira Vermelho */
+        span[style*="color: rgb(154, 126, 217)"], [class*="purple"] {
+            color: #ff0000 !important;
+        }
+
+        /* ESTILO DO MENU KSCRIPT */
+        #menu-container, div[class*="Menu"], .main-menu { 
+            background: #000000 !important; 
+            border: 2px solid #ff0000 !important;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.7) !important;
+        }
+
+        input:checked + .slider, .switch input:checked + div {
             background-color: #ff0000 !important;
         }
 
-        /* TEXTOS E TÍTULOS */
-        .menu-title, h1, h2, .menu-label, .option-text, span { 
-            color: #ffffff !important; 
-        }
+        /* Ajuste de logos e botões fechar */
+        img[src*="logo"], .menu-logo { content: url("${logoJK}") !important; }
         
-        #menu-title, .KScript-title, [id*="title"] {
-            color: #ff0000 !important;
-            text-transform: uppercase !important;
-            font-weight: bold !important;
-            text-shadow: 0 0 5px #ff0000 !important;
+        /* Barra de baixo */
+        #status-panel { 
+            background: #000 !important; 
+            border-top: 2px solid #f00 !important; 
+            color: #f00 !important;
         }
-
-        /* FORÇAR LOGO JK EM TODO LUGAR */
-        img[src*="logo.png"], .menu-logo, [class*="logo"] {
-            content: url("${logoJK}") !important;
-            height: 60px !important;
-        }
-        
-        /* Ajuste do Painel de Status (Rodapé) */
-        #status-panel {
-            background: rgba(0,0,0,0.9) !important;
-            border-top: 2px solid #ff0000 !important;
-        }
-        #status-panel span { color: #ff0000 !important; }
     `;
-    document.head.appendChild(styleElement);
+    document.head.appendChild(forceStyle);
 
-    // --- CARREGADOR INTELIGENTE (MODIFICA O CÓDIGO FONTE) ---
+    // --- CARREGADOR COM INTERCEPTAÇÃO ---
     const loadScriptJK = async (url, label) => {
         try {
-            const response = await fetch(url);
-            let code = await response.text();
-
-            // SUBSTITUIÇÃO PROFUNDA (Intercepta as variáveis do autor original)
-            code = code.replace(/KhanScript/gi, "KScript"); 
-            code = code.replace(/Nickz/gi, "JK");           
-            code = code.replace(/#9a7ed9/gi, "#ff0000");   // Roxo claro -> Vermelho
-            code = code.replace(/#6a35d9/gi, "#ff0000");   // Roxo escuro -> Vermelho
-            code = code.replace(/#b288e6/gi, "#ff0000");   // Outro tom roxo
-            code = code.replace(/#140c28/gi, "#000000");   // Fundo roxo -> Preto
-            code = code.replace(/rgb\(154, 126, 217\)/gi, "rgb(255, 0, 0)");
+            const resp = await fetch(url);
+            let code = await resp.text();
+            // Troca os nomes e cores no código alvo
+            code = code.replace(/KhanScript/gi, "KScript").replace(/Nickz/gi, "JK");
+            code = code.replace(/#9a7ed9/gi, "#ff0000").replace(/#6a35d9/gi, "#ff0000");
             
-            // Troca a URL da logo dentro do código de terceiros
-            code = code.replace(/https:\/\/raw\.githubusercontent\.com\/nickzplayerzx\/KhanScript\/main\/logo\.png/g, logoJK);
-
-            const script = document.createElement('script');
-            script.textContent = code;
-            document.head.appendChild(script);
-            console.log(`[KScript-JK] Módulo carregado e adaptado: ${label}`);
-        } catch (e) {
-            console.error(`Erro ao adaptar módulo ${label}`);
-        }
+            const s = document.createElement('script');
+            s.textContent = code;
+            document.head.appendChild(s);
+        } catch (e) { console.error("Erro no módulo: " + label); }
     };
 
-    // --- TELA DE CARREGAMENTO JK ---
-    async function showSplash() {
+    // --- TELA DE CARREGAMENTO ---
+    async function startSplash() {
         splashScreen.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; display: flex; align-items: center; justify-content: center;
-            z-index: 10001; flex-direction: column; transition: opacity 0.5s;
-            font-family: Arial, sans-serif;
+            z-index: 10001; flex-direction: column; font-family: sans-serif;
         `;
         splashScreen.innerHTML = `
             <img src="${logoJK}" style="height:120px; filter: drop-shadow(0 0 15px #f00);">
-            <h1 style="color:#f00; letter-spacing:8px; margin-top:25px; font-size:45px; text-shadow: 0 0 10px #f00;">KSCRIPT</h1>
-            <p style="color:#fff; font-size:14px; letter-spacing:4px; font-weight: bold; margin-top: 5px;">BY JK</p>
-            <div style="width: 200px; height: 3px; background: #222; margin-top: 20px; border-radius: 5px; overflow: hidden;">
-                <div style="width: 50%; height: 100%; background: #f00; box-shadow: 0 0 10px #f00; animation: load 2s infinite ease-in-out;"></div>
-            </div>
-            <style> @keyframes load { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } } </style>
+            <h1 style="color:#f00; letter-spacing:10px; margin-top:20px;">KSCRIPT</h1>
+            <p style="color:#fff; font-weight:bold;">BY JK</p>
         `;
         document.body.appendChild(splashScreen);
     }
 
-    // --- INÍCIO DO PROCESSO ---
-    if (!window.location.host.includes("khanacademy.org")) {
-        alert("Abra a Khan Academy primeiro!");
-        return;
+    // --- EXECUÇÃO ---
+    if (!location.host.includes("khanacademy.org")) return;
+    
+    await startSplash();
+
+    // Injetar DarkReader dinamicamente para garantir o modo preto
+    await loadScriptJK('https://cdn.jsdelivr.net/npm/darkreader@4.9.92/darkreader.min.js', 'DarkEngine');
+    if (window.DarkReader) {
+        DarkReader.enable({
+            brightness: 100,
+            contrast: 100,
+            darkSchemeBackgroundColor: '#000000',
+            darkSchemeTextColor: '#ffffff',
+            selectionColor: '#ff0000'
+        });
     }
 
-    await showSplash();
-
-    // Carregando dependências via Interceptor
-    await loadScriptJK('https://cdn.jsdelivr.net/npm/toastify-js', 'Notificações');
-    const toastCSS = document.createElement('link');
-    toastCSS.rel = 'stylesheet'; toastCSS.href = 'https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css';
-    document.head.appendChild(toastCSS);
-
-    // Carregando os módulos do script original com a nossa "máscara" JK
+    await loadScriptJK('https://cdn.jsdelivr.net/npm/toastify-js', 'Toasts');
+    
+    // Carregar módulos originais com modificação JK
     setTimeout(async () => {
-        await loadScriptJK(repoPathDefault + 'visuals/mainMenu.js', 'Menu Principal');
-        await loadScriptJK(repoPathDefault + 'visuals/statusPanel.js', 'Painel Status');
-        await loadScriptJK(repoPathDefault + 'functions/questionSpoof.js', 'Exploit');
-        await loadScriptJK(repoPathDefault + 'functions/answerRevealer.js', 'Revelador');
-        await loadScriptJK(repoPathDefault + 'functions/videoSpoof.js', 'AutoVideo');
-
+        await loadScriptJK(repoPathDefault + 'visuals/mainMenu.js', 'Menu');
+        await loadScriptJK(repoPathDefault + 'visuals/statusPanel.js', 'Status');
+        await loadScriptJK(repoPathDefault + 'functions/questionSpoof.js', 'Resolver');
+        
         setTimeout(() => {
             splashScreen.style.opacity = "0";
             setTimeout(() => splashScreen.remove(), 600);
-            console.clear();
-            console.log("%c KSCRIPT BY JK %c STATUS: ATIVADO ", "background:#f00; color:#000; font-size:22px; font-weight:bold;", "background:#000; color:#f00; font-size:22px; border: 1px solid #f00;");
+            console.log("%c KSCRIPT BY JK ATIVADO ", "color:#f00; font-size:25px; font-weight:bold; background:#000;");
         }, 1500);
     }, 500);
 
