@@ -1,0 +1,122 @@
+/* 
+    KhanScript Pro - Auto-Answer Edition
+    Desenvolvedor: Nickz / NeoBeta Edit
+*/
+
+(async function() {
+    const ver = "V1.2 - AutoAnswer";
+    let isDev = false;
+
+    // URLs de Recursos
+    const logoUrl = "https://raw.githubusercontent.com/nickzplayerzx/KhanScript/main/logo.png";
+    const repoPathDefault = `https://raw.githubusercontent.com/nickzplayerzx/KhanScript/${isDev ? "dev" : "main"}/`;
+
+    // Configurações de Recursos
+    window.features = {
+        autoAnswer: true,
+        showAnswers: true,
+        questionSpoof: true,
+        videoSpoof: true,
+        minuteFarmer: false,
+        darkMode: true
+    };
+
+    window.featureConfigs = {
+        autoAnswerDelay: 1500, // Tempo entre as ações (ms)
+    };
+
+    // --- FUNÇÕES DE UTILIDADE ---
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+    
+    function sendToast(text, duration = 3000) {
+        if (window.Toastify) {
+            Toastify({
+                text: text,
+                duration: duration,
+                gravity: "bottom",
+                position: "center",
+                style: {
+                    background: "linear-gradient(135deg, #6a35d9, #8a5bd9)",
+                    borderRadius: "10px"
+                }
+            }).showToast();
+        }
+    }
+
+    async function loadScript(url, label) {
+        try {
+            const resp = await fetch(url.trim());
+            if (!resp.ok) return;
+            const code = await resp.text();
+            const script = document.createElement('script');
+            script.textContent = code;
+            document.head.appendChild(script);
+            console.log(`[Plugin] ${label} carregado.`);
+        } catch (e) { console.warn(`Falha ao carregar ${label}`); }
+    }
+
+    // --- LÓGICA DE AUTO-ANSWER (RESPOSTA AUTOMÁTICA) ---
+    async function handleAutoAnswer() {
+        if (!window.features.autoAnswer) return;
+
+        // Procura botões de escolha, verificar e próximo
+        const choices = document.querySelectorAll('button[data-testid="choice-button"], input[type="radio"], input[type="checkbox"]');
+        const checkBtn = document.querySelector('button[data-testid="exercise-check-answer"]');
+        const nextBtn = document.querySelector('button[data-testid="exercise-next-question"]');
+
+        // Se o botão de "Próximo" ou "Continuar" aparecer, ele clica para avançar
+        if (nextBtn) {
+            await delay(window.featureConfigs.autoAnswerDelay);
+            nextBtn.click();
+            return;
+        }
+
+        // Se houver opções e o botão de verificar estiver ativo
+        if (choices.length > 0 && checkBtn && !checkBtn.disabled) {
+            // Clica na primeira opção (A lógica de resposta certa geralmente vem do AnswerRevealer)
+            choices[0].click();
+            
+            await delay(window.featureConfigs.autoAnswerDelay);
+            
+            if (checkBtn) {
+                checkBtn.click();
+            }
+        }
+    }
+
+    // --- INICIALIZAÇÃO ---
+    if (!location.host.includes("khanacademy.org")) {
+        alert("Execute este script na Khan Academy!");
+        return;
+    }
+
+    // Splash Screen Visual
+    const splash = document.createElement('div');
+    splash.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:#140c28;display:flex;align-items:center;justify-content:center;z-index:10000;color:#d9b3ff;font-family:sans-serif;flex-direction:column;transition:0.5s;`;
+    splash.innerHTML = `<img src="${logoUrl}" style="height:80px;margin-bottom:20px;"><h2>KhanScript Auto-Answer</h2><p>Injetando...</p>`;
+    document.body.appendChild(splash);
+
+    // Carregar Dependências
+    await loadScript('https://cdn.jsdelivr.net/npm/toastify-js', 'Toastify');
+    const css = document.createElement('link');
+    css.rel = 'stylesheet'; css.href = 'https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css';
+    document.head.appendChild(css);
+
+    // Carregar Plugins do Repo
+    const plugins = ['answerRevealer', 'mainMenu', 'statusPanel', 'autoAnswer'];
+    plugins.forEach(p => loadScript(`${repoPathDefault}functions/${p}.js`, p).catch(()=>{}));
+
+    // Monitorar o DOM para responder automaticamente
+    const observer = new MutationObserver(() => {
+        handleAutoAnswer();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Finalizar Injeção
+    await delay(2000);
+    splash.style.opacity = '0';
+    setTimeout(() => splash.remove(), 600);
+    
+    sendToast("KhanScript Conectado! Auto-Answer ON 🚀");
+    console.log("%c KhanScript Ativo! ", "background: #6a35d9; color: #fff; font-size: 20px;");
+})();
