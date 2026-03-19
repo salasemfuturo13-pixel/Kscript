@@ -1,162 +1,165 @@
 /*
-    KScript V1.0 - Personalizado por JK
-    Cores: Black & Red
+    KScript V1.0 - Desenvolvido por JK
+    Tema: Black & Red Edition
+    Compatível: Khan Academy
 */
 
-const ver = "V1.0";
-let isDev = false;
+(async function() {
+    const ver = "V1.0";
+    let isDev = false;
 
-// Configurações JK - Logo e Caminhos
-const logoUrl = "https://github.com/salasemfuturo13-pixel/Kscript/blob/main/logo.png?raw=true";
-const repoPathDefault = `https://raw.githubusercontent.com/nickzplayerzx/KhanScript/${isDev ? "dev" : "main"}/`;
+    // --- CONFIGURAÇÕES JK ---
+    const logoUrl = "https://github.com/salasemfuturo13-pixel/Kscript/blob/main/logo.png?raw=true";
+    const repoPathDefault = `https://raw.githubusercontent.com/nickzplayerzx/KhanScript/${isDev ? "dev" : "main"}/`;
 
-let device = {
-    mobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Windows Phone|Mobile|Tablet|Kindle|Silk|PlayBook|BB10/i.test(navigator.userAgent),
-    apple: /iPhone|iPad|iPod|Macintosh|Mac OS X/i.test(navigator.userAgent)
-};
+    let user = { nickname: "Estudante", username: "User", UID: 0 };
+    let loadedPlugins = [];
+    const splashScreen = document.createElement('div');
 
-let user = { username: "Username", nickname: "Nickname", UID: 0 };
-let loadedPlugins = [];
-
-const splashScreen = document.createElement('div');
-
-window.features = {
-    questionSpoof: true,
-    videoSpoof: true,
-    showAnswers: false,
-    autoAnswer: false,
-    customBanner: false,
-    nextRecomendation: false,
-    repeatQuestion: false,
-    minuteFarmer: false,
-    rgbLogo: false,
-    darkMode: true
-};
-
-window.featureConfigs = { autoAnswerDelay: 3, customUsername: "", customPfp: "" };
-
-// Estilização do Scroll e Fontes (Dark Red)
-document.head.appendChild(Object.assign(document.createElement('style'), {
-    innerHTML: `
+    // Funções de Utilidade
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+    
+    // --- ESTILIZAÇÃO CSS (SOBRESCREVENDO O ROXO) ---
+    const styleElement = document.createElement("style");
+    styleElement.innerHTML = `
+        /* Scrollbar Personalizada */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #000000; }
         ::-webkit-scrollbar-thumb { background: #ff0000; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #b30000; }
-        .toastify { box-shadow: 0 6px 22px rgba(255, 0, 0, 0.3) !important; }
-    `
-}));
 
-// Função de Notificações (Toasts) personalizadas em Vermelho
-function sendToast(text, duration = 3000, gravity = 'bottom') {
-    if (window.Toastify)
-        Toastify({
-            text: text,
-            duration: duration,
-            gravity: gravity,
-            position: "center",
-            stopOnFocus: true,
-            style: {
-                background: "linear-gradient(100deg, #000000, #ff0000)",
-                color: "#ffffff",
-                borderRadius: "8px",
-                fontFamily: "Arial, sans-serif",
-                fontSize: "15px",
-                border: "1px solid #ff0000"
-            }
-        }).showToast();
-}
+        /* ESTILO DO MENU KSCRIPT (FORÇADO BLACK & RED) */
+        #menu-container, [id*="menu"], .main-menu, [class*="Menu"] { 
+            background: rgba(0, 0, 0, 0.95) !important; 
+            border: 2px solid #ff0000 !important;
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.5) !important;
+            border-radius: 15px !important;
+            color: white !important;
+        }
 
-async function showSplashScreen() {
-    splashScreen.style.cssText = `
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: radial-gradient(circle, #220000 0%, #000000 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        opacity: 0;
-        transition: opacity 0.5s ease;
-        user-select: none;
-        color: #ffffff;
-        font-family: Arial, sans-serif;
-        flex-direction: column;
+        /* Títulos e Textos */
+        h1, h2, .menu-title, [id*="title"] {
+            color: #ff0000 !important;
+            text-shadow: 0 0 10px #ff0000 !important;
+        }
+
+        /* Toggles / Interruptores */
+        input:checked + .slider, .switch input:checked + div {
+            background-color: #ff0000 !important;
+        }
+        
+        input:checked + .slider:before, .switch input:checked + div:before {
+            background-color: #ffffff !important;
+        }
+
+        /* Painel de Status Inferior */
+        #status-panel, [id*="stats"], [class*="Status"] {
+            background: #000000 !important;
+            border-top: 3px solid #ff0000 !important;
+            box-shadow: 0 -5px 15px rgba(255, 0, 0, 0.3) !important;
+            color: #ffffff !important;
+        }
+
+        [id*="stats"] span, .stat-value {
+            color: #ff0000 !important;
+            font-weight: bold !important;
+        }
+
+        /* Créditos no Menu/Painel */
+        .watermark, [id*="credit"], .credits {
+            color: #ff0000 !important;
+            font-family: 'Arial', sans-serif !important;
+        }
+        
+        /* Toastify Customizado */
+        .toastify {
+            background: linear-gradient(to right, #000000, #ff0000) !important;
+            color: white !important;
+            border: 1px solid #ff0000 !important;
+            border-radius: 10px !important;
+        }
     `;
-    splashScreen.innerHTML = `
-        <img src="${logoUrl}" style="height:120px; margin-bottom:18px; filter: drop-shadow(0 0 15px rgba(255, 0, 0, 0.6));">
-        <span style="font-weight:800; letter-spacing:4px; font-size:35px; color:#ff0000; text-shadow: 0 0 10px #ff0000;">KScript</span>
-        <span style="margin-top:7px; font-size:14px; color:#ccc; font-weight:500; text-transform: uppercase; letter-spacing: 2px;">Carregando... by JK</span>
-    `;
-    document.body.appendChild(splashScreen);
-    setTimeout(() => splashScreen.style.opacity = '1', 10);
-}
+    document.head.appendChild(styleElement);
 
-async function hideSplashScreen() {
-    splashScreen.style.opacity = '0';
-    setTimeout(() => splashScreen.remove(), 800);
-}
+    // --- FUNÇÕES DE INTERFACE ---
+    function sendToast(text, duration = 3000) {
+        if (window.Toastify) {
+            Toastify({
+                text: text,
+                duration: duration,
+                gravity: "bottom",
+                position: "center"
+            }).showToast();
+        }
+    }
 
-async function loadScript(url, label) {
-    return fetch(url.trim()).then(r => r.text()).then(script => {
-        loadedPlugins.push(label);
-        eval(script);
-    }).catch(() => console.log("Erro ao carregar: " + label));
-}
+    async function showSplashScreen() {
+        splashScreen.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, #330000 0%, #000000 100%);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10000; color: white; font-family: sans-serif;
+            flex-direction: column; transition: opacity 0.5s ease;
+        `;
+        splashScreen.innerHTML = `
+            <img src="${logoUrl}" style="height:120px; filter: drop-shadow(0 0 15px #ff0000); margin-bottom: 20px;">
+            <h1 style="color:#ff0000; font-size:40px; margin:0; text-shadow: 0 0 15px #ff0000;">KSCRIPT</h1>
+            <p style="letter-spacing: 3px; font-weight: bold; color: #888;">BY JK</p>
+        `;
+        document.body.appendChild(splashScreen);
+        await delay(100);
+        splashScreen.style.opacity = "1";
+    }
 
-function setupMenu() {
-    loadScript(repoPathDefault + 'visuals/mainMenu.js', 'Menu');
-    loadScript(repoPathDefault + 'visuals/statusPanel.js', 'Painel');
-}
-
-function setupMain() {
-    loadScript(repoPathDefault + 'functions/questionSpoof.js', 'Spoof');
-    loadScript(repoPathDefault + 'functions/videoSpoof.js', 'Video');
-    loadScript(repoPathDefault + 'functions/answerRevealer.js', 'Revealer');
-}
-
-(async function() {
-    if (!window.location.href.includes("khanacademy.org")) {
-        alert("KScript deve ser usado na Khan Academy!");
+    // --- INICIALIZAÇÃO ---
+    if (!location.href.includes("khanacademy.org")) {
+        alert("Acesse a Khan Academy primeiro!");
         return;
     }
 
     await showSplashScreen();
 
-    // DarkReader para tema Preto/Vermelho
-    await loadScript('https://cdn.jsdelivr.net/npm/darkreader@4.9.92/darkreader.min.js', 'TemaDark');
-    if (window.DarkReader) {
-        DarkReader.enable({
-            brightness: 100,
-            contrast: 110,
-            darkSchemeBackgroundColor: '#000000',
-            darkSchemeTextColor: '#ff0000'
-        });
-    }
+    // Carregar Dependências
+    const loadScript = (url, label) => {
+        return fetch(url).then(r => r.text()).then(code => {
+            // Pequeno Hack para mudar o crédito de quem criou o menu dinamicamente
+            const modifiedCode = code.replace(/Nickz/g, "JK").replace(/KhanScript/g, "KScript");
+            eval(modifiedCode);
+            loadedPlugins.push(label);
+        }).catch(() => console.error("Falha ao carregar: " + label));
+    };
 
-    await loadScript('https://cdn.jsdelivr.net/npm/toastify-js', 'Notificacoes');
-    const link = document.createElement('link');
-    link.rel = 'stylesheet'; link.href = 'https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css';
-    document.head.appendChild(link);
+    // Plugins Essenciais
+    await loadScript('https://cdn.jsdelivr.net/npm/toastify-js', 'Notificações');
+    const toastStyle = document.createElement('link');
+    toastStyle.rel = 'stylesheet'; toastStyle.href = 'https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css';
+    document.head.appendChild(toastStyle);
 
-    // Identificação de Usuário
+    // Carregando Módulos do Menu e Funções
+    await loadScript(repoPathDefault + 'visuals/mainMenu.js', 'Menu');
+    await loadScript(repoPathDefault + 'visuals/statusPanel.js', 'Stats');
+    await loadScript(repoPathDefault + 'functions/questionSpoof.js', 'Resolver');
+    await loadScript(repoPathDefault + 'functions/videoSpoof.js', 'Video');
+    await loadScript(repoPathDefault + 'functions/answerRevealer.js', 'Revealer');
+
+    // Pega o nome do usuário na Khan
     fetch("https://pt.khanacademy.org/api/internal/graphql/getFullUserProfile", {
         method: "POST",
-        body: '{"operationName":"getFullUserProfile","query":"query getFullUserProfile($kaid: String, $username: String) { user(kaid: $kaid, username: $username) { nickname } }"}'
+        body: '{"operationName":"getFullUserProfile","query":"query getFullUserProfile { user { nickname } }"}'
     }).then(r => r.json()).then(d => {
-        if(d?.data?.user) user.nickname = d.data.user.nickname;
+        if(d.data?.user) user.nickname = d.data.user.nickname;
     });
 
-    setTimeout(async () => {
-        sendToast("KScript Injetado! [By JK]");
-        await new Promise(r => setTimeout(r, 800));
-        sendToast(`Bem-vindo, ${user.nickname}`, 3000);
+    // Finalização
+    setTimeout(() => {
+        splashScreen.style.opacity = "0";
+        setTimeout(() => splashScreen.remove(), 500);
         
-        hideSplashScreen();
-        setupMenu();
-        setupMain();
+        sendToast(`KScript ${ver} Carregado!`);
+        setTimeout(() => sendToast(`Bem-vindo, ${user.nickname} [JK Version]`), 1000);
         
         console.clear();
-        console.log("%cKScript %cby JK", "color:#ff0000;font-size:25px;font-weight:bold;", "color:#ffffff;font-size:15px;");
-    }, 2000);
+        console.log("%c KSCRIPT BY JK %c Status: Online ", "background:#ff0000; color:#000; font-size:20px; font-weight:bold;", "background:#000; color:#ff0000; font-size:20px;");
+    }, 2500);
+
 })();
