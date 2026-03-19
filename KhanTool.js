@@ -1,8 +1,9 @@
-const ver = "V1.2"; // Atualizei a versão
+const ver = "V1.1"; // Versão atualizada
 let isDev = false;
 
-const logoUrl = "https://raw.githubusercontent.com/OnePrism0/KhanTool/main/logo.png";
-const repoPathDefault = `https://raw.githubusercontent.com/OnePrism0/KhanTool/${isDev ? "dev" : "main"}/`;
+// URLs (sem espaços, usando raw)
+const logoUrl = "https://raw.githubusercontent.com/nickzplayerzx/KhanScript/main/logo.png";
+const repoPathDefault = `https://raw.githubusercontent.com/nickzplayerzx/KhanScript/${isDev ? "dev" : "main"}/`;
 
 let device = {
     mobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Windows Phone|Mobile|Tablet|Kindle|Silk|PlayBook|BB10/i.test(navigator.userAgent),
@@ -12,13 +13,13 @@ let device = {
 let user = { username: "Username", nickname: "Nickname", UID: 0 };
 let loadedPlugins = [];
 
-const splashScreen = document.createElement('splashScreen');
+const splashScreen = document.createElement('div');
 
 window.features = {
     questionSpoof: true,
     videoSpoof: true,
     showAnswers: false,
-    autoAnswer: true, // ATIVEI POR PADRÃO PARA VOCÊ
+    autoAnswer: false,
     customBanner: false,
     nextRecomendation: false,
     repeatQuestion: false,
@@ -32,88 +33,141 @@ window.featureConfigs = {
     customPfp: ""
 };
 
-// --- CLASSES E UTILITÁRIOS ORIGINAIS ---
+// Segurança básica
+document.addEventListener('contextmenu', (e) => !window.disableSecurity && e.preventDefault());
+document.addEventListener('keydown', (e) => {
+    if (!window.disableSecurity && (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(e.key)))) {
+        e.preventDefault();
+    }
+});
+
+// Favicon
+(function(){
+    let favicon = document.querySelector("link[rel~='icon']") || document.createElement("link");
+    favicon.rel = "icon";
+    favicon.href = logoUrl;
+    document.head.appendChild(favicon);
+})();
+
+// Scrollbar e Style
+const style = document.createElement('style');
+style.innerHTML = `
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #140c28; }
+    ::-webkit-scrollbar-thumb { background: #9a7ed9; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #b288e6; }
+`;
+document.head.appendChild(style);
+
+// EventEmitter para o DOM
 class EventEmitter {
     constructor() { this.events = {} }
-    on(t, e) { "string" == typeof t && (t = [t]), t.forEach(t => { this.events[t] || (this.events[t] = []), this.events[t].push(e) }) }
-    emit(t, ...e) { this.events[t] && this.events[t].forEach(t => { t(...e) }) }
-};
+    on(t, e) { this.events[t] || (this.events[t] = []); this.events[t].push(e); }
+    emit(t, ...e) { if(this.events[t]) this.events[t].forEach(f => f(...e)); }
+}
 const plppdo = new EventEmitter();
 
+new MutationObserver(() => plppdo.emit('domChanged')).observe(document.body, { childList: true, subtree: true });
+
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+const playAudio = url => { const audio = new Audio(url.trim()); audio.play().catch(()=>{}); };
 
-// --- LÓGICA DE RESPOSTA CORRIGIDA (O que faltava no seu) ---
-async function solveLogic() {
-    if (!window.features.autoAnswer) return;
-
-    // 1. Procura campos de matemática (MathQuill) ou texto
-    const inputs = document.querySelectorAll('.mq-editable-field textarea, .mq-textarea textarea, input[type="text"], input[type="number"]');
-    
-    if (inputs.length > 0) {
-        await delay(window.featureConfigs.autoAnswerDelay * 1000);
-        
-        inputs.forEach(input => {
-            input.focus();
-            // Simula digitação para o React/MathQuill detectar
-            const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set || 
-                           Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value")?.set;
-            
-            if(setter) setter.call(input, "0"); // Preenche com 0 (ou resposta se tiver o plugin)
-            
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-        });
+// FUNÇÃO CORRIGIDA: Evita spam de Toast e verifica se o botão pode ser clicado
+const findAndClickBySelector = selector => {
+    const element = document.querySelector(selector);
+    // Verifica se o elemento existe, está visível e não está desabilitado
+    if (element && element.offsetParent !== null && !element.disabled) {
+        element.click();
+        // Toast removido para evitar poluição visual durante o auto-answer
     }
+};
 
-    // 2. Clica nos botões de Verificar ou Próximo
-    const checkBtn = document.querySelector('button[data-test-id="exercise-check-answer"]');
-    const nextBtn = document.querySelector('button[data-test-id="exercise-next-question"]');
+function sendToast(text, duration = 3000, gravity = 'bottom') {
+    if (window.Toastify)
+        Toastify({
+            text: text,
+            duration: duration,
+            gravity: gravity,
+            position: "center",
+            style: {
+                background: "linear-gradient(100deg, #6a35d9, #8a5bd9)",
+                color: "#f8f2ff",
+                borderRadius: "10px",
+                fontFamily: "Arial, sans-serif",
+                boxShadow: "0 6px 22px rgba(106, 53, 217, 0.45)"
+            }
+        }).showToast();
+}
 
-    if (nextBtn) {
-        nextBtn.click();
-    } else if (checkBtn) {
-        checkBtn.removeAttribute('disabled'); // Força o botão a ficar clicável
-        checkBtn.click();
+// Carregador de Script otimizado (Inject)
+async function loadScript(url, label) {
+    try {
+        const response = await fetch(url.trim());
+        if (!response.ok) throw new Error();
+        const scriptBody = await response.text();
+        const scriptTag = document.createElement('script');
+        scriptTag.textContent = scriptBody;
+        document.head.appendChild(scriptTag);
+        loadedPlugins.push(label);
+    } catch (e) {
+        console.error(`Erro ao carregar plugin: ${label}`);
+        sendToast(`Erro: ${label}`, 4000, 'top');
     }
 }
 
-// Escuta mudanças no site para responder automaticamente
-plppdo.on('domChanged', () => {
-    if (window.features.autoAnswer) solveLogic();
-});
+async function loadCss(url) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet'; link.href = url.trim();
+    document.head.appendChild(link);
+}
 
-// --- FUNÇÕES DE CARREGAMENTO ORIGINAIS ---
 async function showSplashScreen() {
-    splashScreen.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(122deg,#e4f1fd 0%,#176bd7 100%);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;transition:opacity 0.5s ease;color:#1851a8;font-family:Arial;text-align:center;flex-direction:column;";
-    splashScreen.innerHTML = `<img src="${logoUrl}" style="height:100px;margin-bottom:18px;"><span style="font-weight:800;font-size:30px;color:#176bd7">KhanTool</span><span>Carregando...</span>`;
+    splashScreen.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:#140c28;display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.5s;color:#e6ccff;font-family:Arial;flex-direction:column;`;
+    splashScreen.innerHTML = `<img src="${logoUrl}" style="height:100px;margin-bottom:15px;"><b style="font-size:25px;">KhanScript</b><span>Carregando...</span>`;
     document.body.appendChild(splashScreen);
-    setTimeout(() => splashScreen.style.opacity = '1', 10);
+}
+
+const hideSplashScreen = () => { splashScreen.style.opacity = '0'; setTimeout(() => splashScreen.remove(), 600); };
+
+function setupMenu() {
+    loadScript(repoPathDefault + 'visuals/mainMenu.js', 'mainMenu');
+    loadScript(repoPathDefault + 'visuals/statusPanel.js', 'statusPanel');
+    loadScript(repoPathDefault + 'visuals/widgetBot.js', 'widgetBot');
 }
 
 function setupMain() {
-    // Mantive sua estrutura de carregar scripts externos
-    const scripts = ['questionSpoof', 'videoSpoof', 'minuteFarm', 'spoofUser', 'answerRevealer', 'autoAnswer'];
-    scripts.forEach(s => {
-        const script = document.createElement('script');
-        script.src = `${repoPathDefault}functions/${s}.js`;
-        document.head.appendChild(script);
-        loadedPlugins.push(s);
-    });
+    const plugins = ['questionSpoof', 'videoSpoof', 'minuteFarm', 'spoofUser', 'answerRevealer', 'rgbLogo', 'customBanner', 'autoAnswer'];
+    plugins.forEach(p => loadScript(`${repoPathDefault}functions/${p}.js`, p));
 }
 
-// --- OBSERVAÇÃO DO DOM ---
-new MutationObserver(() => plppdo.emit('domChanged'))
-    .observe(document.body, { childList: true, subtree: true });
+(async function init() {
+    if (!location.host.includes("khanacademy.org")) return alert("Use na Khan Academy!");
 
-// --- INICIALIZAÇÃO ---
-(async function(){
     await showSplashScreen();
+
+    // Dependências externas
+    await loadScript('https://cdn.jsdelivr.net/npm/darkreader@4.9.92/darkreader.min.js', 'DarkReader');
+    if (window.DarkReader) DarkReader.enable({ brightness: 100, contrast: 100, darkSchemeBackgroundColor: '#140c28' });
     
-    // Simula o carregamento que você tinha
-    setTimeout(() => {
-        splashScreen.style.opacity = '0';
-        setTimeout(() => splashScreen.remove(), 800);
-        setupMain();
-        console.log("KhanTool V1.2 Ativo!");
-    }, 2000);
+    await loadCss('https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css');
+    await loadScript('https://cdn.jsdelivr.net/npm/toastify-js', 'Toastify');
+
+    // Identificação de usuário via API da Khan
+    fetch("/api/internal/graphql/getFullUserProfile", {
+        method: "POST",
+        body: JSON.stringify({ operationName: "getFullUserProfile", query: "query getFullUserProfile { user { id nickname username } }" })
+    }).then(r => r.json()).then(d => {
+        if(d.data?.user) user = { nickname: d.data.user.nickname, username: d.data.user.username, UID: d.data.user.id.slice(-5) };
+    }).catch(()=>{});
+
+    sendToast("KhanScript injetado!");
+    playAudio('https://r2.e-z.host/4d0a0bea-60f8-44d6-9e74-3032a64a9f32/gcelzszy.wav');
+    
+    await delay(1000);
+    hideSplashScreen();
+    setupMenu();
+    setupMain();
+
+    console.clear();
+    console.log("%cKhanScript %cCarregado", "color:purple;font-size:20px;font-weight:bold;", "color:white;");
 })();
