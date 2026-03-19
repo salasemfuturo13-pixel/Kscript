@@ -9,7 +9,7 @@
 
     // --- CONFIGURAÇÕES JK ---
     const logoJK = "https://github.com/salasemfuturo13-pixel/Kscript/blob/main/logo.png?raw=true";
-    const repoPathDefault = `https://raw.githubusercontent.com/nickzplayerzx/KhanScript/${isDev ? "dev" : "main"}/`;
+    const repoPathDefault = `https://raw.githubusercontent.com/salasemfuturo13-pixel/Kscript/refs/heads/main/Kscript/${isDev ? "dev" : "main"}/`;
 
     const splashScreen = document.createElement('div');
 
