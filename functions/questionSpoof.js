@@ -1,14 +1,14 @@
 /* 
-   KSCRIPT 100% ACCURACY - BY JK
-   Interceptador de Respostas Reais (GraphQL) + Interface Customizada
+   KSCRIPT 100% ACCURACY - BY JK (FIXED)
+   Resolução automática para Radio e campos de Texto/Matemática
 */
 
 (function() {
     const logoJK = "https://github.com/salasemfuturo13-pixel/Kscript/blob/main/logo.png?raw=true";
     const originalFetch = window.fetch;
-    let lastCorrectAnswer = null;
+    let cachedAnswers = null;
 
-    // --- 1. INTERCEPTAÇÃO DE REDE (PEGA A RESPOSTA DO SERVIDOR) ---
+    // --- 1. INTERCEPTADOR DE RESPOSTAS (Roda em Background) ---
     window.fetch = async function(...args) {
         const res = await originalFetch.apply(this, args);
         const url = args[0] instanceof Request ? args[0].url : args[0];
@@ -17,116 +17,114 @@
             const clone = res.clone();
             try {
                 const data = await clone.json();
-                let itemDataRaw = null;
-
-                // Navega no JSON da Khan Academy para achar a questão
+                let itemData = null;
                 for (const key in data.data) {
                     if (data.data[key]?.item?.itemData) {
-                        itemDataRaw = JSON.parse(data.data[key].item.itemData);
+                        itemData = JSON.parse(data.data[key].item.itemData);
                         break;
                     }
                 }
-
-                if (itemDataRaw) {
-                    lastCorrectAnswer = extractCorrectSolution(itemDataRaw);
-                    console.log("%c [JK] Resposta 100% Extraída do Servidor! ", "background: #f00; color: #fff; font-weight: bold;");
+                if (itemData) {
+                    cachedAnswers = extractAnswers(itemData);
+                    console.log("%c [JK] Resposta capturada com sucesso!", "color: #0f0; font-weight: bold;");
                 }
             } catch (e) { console.error("Erro JK-Interceptor:", e); }
         }
         return res;
     };
 
-    // --- 2. MOTOR DE EXTRAÇÃO (Lógica para extrair a solução real) ---
-    function extractCorrectSolution(itemData) {
-        let results = [];
+    function extractAnswers(itemData) {
+        let solutions = [];
         for (const [key, w] of Object.entries(itemData.question.widgets)) {
-            // Se for Múltipla Escolha (Radio)
+            // Múltipla escolha
             if (w.type === 'radio' && w.options?.choices) {
-                const correctIdx = w.options.choices.findIndex(c => c.correct);
-                if (correctIdx !== -1) results.push({ type: 'radio', index: correctIdx, widget: key });
+                const idx = w.options.choices.findIndex(c => c.correct);
+                if (idx !== -1) solutions.push({ type: 'radio', index: idx });
             }
-            // Se for Entrada Numérica ou Expressão (Input)
-            else if ((w.type === 'numeric-input' || w.type === 'input-number' || w.type === 'expression') && w.options?.answers) {
-                const ans = w.options.answers.find(a => a.status === 'correct');
-                if (ans) results.push({ type: 'input', value: ans.value, widget: key });
-            }
-            else if (w.type === 'expression' && w.options?.answerForms) {
-                const form = w.options.answerForms.find(f => f.considered === 'correct');
-                if (form) results.push({ type: 'input', value: form.value, widget: key });
+            // Entrada de número ou texto
+            else if ((w.type === 'numeric-input' || w.type === 'input-number' || w.type === 'expression')) {
+                const ans = w.options?.answers?.find(a => a.status === 'correct') || 
+                            w.options?.answerForms?.find(f => f.considered === 'correct');
+                if (ans) solutions.push({ type: 'input', value: ans.value });
             }
         }
-        return results;
+        return solutions;
     }
 
-    // --- 3. APLICAÇÃO AUTOMÁTICA + INTERFACE JK ---
-    function applyJKExploit() {
+    // --- 2. MOTOR DE APLICAÇÃO (O que faz o script "Responder") ---
+    function runJKEngine() {
         const renderer = document.querySelector('.perseus-renderer');
-        if (!renderer || renderer.dataset.jkInjected || !lastCorrectAnswer) return;
+        if (!renderer || renderer.dataset.jkInjected || !cachedAnswers) return;
 
-        console.log("%c [JK] Aplicando Solução Certeira... ", "color: #0f0;");
+        console.log("%c [JK] Aplicando resposta na tela...", "color: #ff0000;");
 
-        lastCorrectAnswer.forEach(ans => {
+        cachedAnswers.forEach(ans => {
             if (ans.type === 'radio') {
                 const options = document.querySelectorAll('[role="radio"], .perseus-radio-option, input[type="radio"]');
-                if (options[ans.index]) options[ans.index].click();
+                if (options[ans.index]) {
+                    options[ans.index].click();
+                    options[ans.index].dispatchEvent(new Event('click', { bubbles: true }));
+                }
             } 
             else if (ans.type === 'input') {
-                const inputs = document.querySelectorAll('input, [class*="mathquill"], textarea');
+                // Seleciona todos os campos possíveis de entrada
+                const inputs = document.querySelectorAll('input, .mathquill-rendered-math textarea, .perseus-input-number input');
                 inputs.forEach(input => {
                     input.value = ans.value;
-                    // Dispara eventos para o site reconhecer a digitação
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                    // Dispara eventos para o site "sentir" que algo foi digitado
+                    ['input', 'change', 'blur'].forEach(ev => input.dispatchEvent(new Event(ev, { bubbles: true })));
                 });
             }
         });
 
-        // Injeta o Visual do KScript (Seu Menu personalizado na questão)
         injectJKUI(renderer);
         renderer.dataset.jkInjected = "true";
 
-        // Auto-Verificar (Opcional: Clica no botão cinza sozinho)
+        // Tenta clicar no botão VERIFICAR (Vários seletores para não falhar)
         setTimeout(() => {
-            const checkBtn = document.querySelector('button[data-test-id="exercise-check-button"]');
+            const checkBtn = document.querySelector('button[data-test-id="exercise-check-button"]') || 
+                             document.querySelector('button[role="button"]:contains("Verificar")') ||
+                             document.querySelector('button span:contains("Verificar")')?.parentElement;
+
             if (checkBtn && !checkBtn.disabled) {
                 checkBtn.click();
-                lastCorrectAnswer = null; // Limpa para a próxima
+                cachedAnswers = null; // Reseta para a próxima
+            } else {
+                // Se o botão não foi clicado, tenta o seletor genérico de botões da Khan
+                const allButtons = document.querySelectorAll('button');
+                allButtons.forEach(btn => {
+                    if (btn.innerText.includes("Verificar") || btn.innerText.includes("Check")) {
+                        btn.click();
+                        cachedAnswers = null;
+                    }
+                });
             }
         }, 1200);
     }
 
     function injectJKUI(target) {
         const div = document.createElement('div');
-        div.style.cssText = `
-            background: #000; border: 2px solid #ff0000; border-radius: 10px; 
-            padding: 20px; margin: 15px 0; color: #fff; font-family: sans-serif;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
-        `;
+        div.style.cssText = `background:#000; border:2px solid #f00; border-radius:10px; padding:15px; margin-bottom:15px; color:#fff; font-family:sans-serif; box-shadow: 0 0 10px #f00;`;
         div.innerHTML = `
-            <div style="display: flex; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 10px;">
-                <img src="${logoJK}" style="height: 35px; margin-right: 12px; filter: drop-shadow(0 0 5px #f00);">
-                <span style="font-weight: bold; font-size: 18px; color: #ff0000; letter-spacing: 2px;">KSCRIPT™</span>
-            </div>
-            
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <span style="color: #00ff00; font-size: 22px; margin-right: 10px;">✅</span>
-                <span style="font-weight: bold; font-size: 15px; color: #00ff00;">RESPOSTA 100% CERTEIRA SINCRONIZADA!</span>
-            </div>
-            
-            <p style="color: #bbb; font-size: 12px; margin: 5px 0;">A solução foi extraída diretamente dos servidores da Khan Academy e aplicada pelo motor JK.</p>
-            
-            <div style="margin-top: 15px; font-size: 11px; text-align: right; color: #444;">
-                KScript v1.0 | Authorized by JK
+            <div style="display:flex; align-items:center;">
+                <img src="${logoJK}" style="height:35px; margin-right:15px;">
+                <div>
+                    <b style="color:#ff0000; font-size:16px;">KSCRIPT BY JK</b><br>
+                    <span style="color:#0f0; font-size:12px;">✅ RESPOSTA SINCRONIZADA E APLICADA!</span>
+                </div>
             </div>
         `;
         target.prepend(div);
     }
 
-    // Monitoramento constante
-    setInterval(() => {
-        if (window.features?.questionSpoof || document.getElementById('toggle-question-spoof')?.checked) {
-            applyJKExploit();
-        }
-    }, 1500);
+    // Roda o motor a cada 1.5 segundos
+    setInterval(runJKEngine, 1500);
+
+    // Suporte para jQuery :contains se o site usar
+    if (window.jQuery) {
+        window.jQuery.expr[':'].contains = window.jQuery.expr.createPseudo(function(text) {
+            return function(elem) { return window.jQuery(elem).text().toUpperCase().indexOf(text.toUpperCase()) >= 0; };
+        });
+    }
 
 })();
