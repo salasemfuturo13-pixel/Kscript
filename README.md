@@ -1,4 +1,4 @@
-# 🔹 KhanTool
+# 🔹 KScript
 ### O cheat mais avançado para a Khan Academy.
 
 🙂 Bookmarklet:
