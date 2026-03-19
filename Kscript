@@ -1,7 +1,6 @@
 /*
     KScript V1.0 - Desenvolvido por JK
-    Tema: Black & Red Edition
-    Compatível: Khan Academy
+    Tema: Deep Black & Red Edition (Full Override)
 */
 
 (async function() {
@@ -9,157 +8,141 @@
     let isDev = false;
 
     // --- CONFIGURAÇÕES JK ---
-    const logoUrl = "https://github.com/salasemfuturo13-pixel/Kscript/blob/main/logo.png?raw=true";
+    // Sua logo personalizada
+    const logoJK = "https://github.com/salasemfuturo13-pixel/Kscript/blob/main/logo.png?raw=true";
     const repoPathDefault = `https://raw.githubusercontent.com/nickzplayerzx/KhanScript/${isDev ? "dev" : "main"}/`;
 
-    let user = { nickname: "Estudante", username: "User", UID: 0 };
-    let loadedPlugins = [];
+    let user = { nickname: "Estudante" };
     const splashScreen = document.createElement('div');
 
-    // Funções de Utilidade
-    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-    
-    // --- ESTILIZAÇÃO CSS (SOBRESCREVENDO O ROXO) ---
+    // --- ESTILIZAÇÃO CSS (SOBRESCREVENDO O SITE E O MENU) ---
     const styleElement = document.createElement("style");
     styleElement.innerHTML = `
-        /* Scrollbar Personalizada */
+        /* Fundo da Página e Scroll */
+        body { background-color: #000000 !important; }
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #000000; }
-        ::-webkit-scrollbar-thumb { background: #ff0000; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #b30000; }
+        ::-webkit-scrollbar-track { background: #000 !important; }
+        ::-webkit-scrollbar-thumb { background: #ff0000 !important; border-radius: 10px !important; }
 
-        /* ESTILO DO MENU KSCRIPT (FORÇADO BLACK & RED) */
-        #menu-container, [id*="menu"], .main-menu, [class*="Menu"] { 
-            background: rgba(0, 0, 0, 0.95) !important; 
+        /* FORÇAR MENU PRETO E VERMELHO */
+        #menu-container, div[class*="Menu"], .main-menu, [id*="stats-panel"] { 
+            background: #000000 !important; 
             border: 2px solid #ff0000 !important;
-            box-shadow: 0 0 25px rgba(255, 0, 0, 0.5) !important;
-            border-radius: 15px !important;
-            color: white !important;
-        }
-
-        /* Títulos e Textos */
-        h1, h2, .menu-title, [id*="title"] {
-            color: #ff0000 !important;
-            text-shadow: 0 0 10px #ff0000 !important;
-        }
-
-        /* Toggles / Interruptores */
-        input:checked + .slider, .switch input:checked + div {
-            background-color: #ff0000 !important;
-        }
-        
-        input:checked + .slider:before, .switch input:checked + div:before {
-            background-color: #ffffff !important;
-        }
-
-        /* Painel de Status Inferior */
-        #status-panel, [id*="stats"], [class*="Status"] {
-            background: #000000 !important;
-            border-top: 3px solid #ff0000 !important;
-            box-shadow: 0 -5px 15px rgba(255, 0, 0, 0.3) !important;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.6) !important;
+            border-radius: 12px !important;
             color: #ffffff !important;
         }
 
-        [id*="stats"] span, .stat-value {
-            color: #ff0000 !important;
-            font-weight: bold !important;
+        /* SUBSTITUIR ROXO POR VERMELHO NOS BOTÕES (TOGGLES) */
+        input:checked + .slider, 
+        .switch input:checked + div, 
+        [style*="background-color: rgb(154, 126, 217)"],
+        [style*="background-color: rgb(106, 53, 217)"] {
+            background-color: #ff0000 !important;
         }
 
-        /* Créditos no Menu/Painel */
-        .watermark, [id*="credit"], .credits {
-            color: #ff0000 !important;
-            font-family: 'Arial', sans-serif !important;
+        /* TEXTOS E TÍTULOS */
+        .menu-title, h1, h2, .menu-label, .option-text, span { 
+            color: #ffffff !important; 
         }
         
-        /* Toastify Customizado */
-        .toastify {
-            background: linear-gradient(to right, #000000, #ff0000) !important;
-            color: white !important;
-            border: 1px solid #ff0000 !important;
-            border-radius: 10px !important;
+        #menu-title, .KScript-title, [id*="title"] {
+            color: #ff0000 !important;
+            text-transform: uppercase !important;
+            font-weight: bold !important;
+            text-shadow: 0 0 5px #ff0000 !important;
         }
+
+        /* FORÇAR LOGO JK EM TODO LUGAR */
+        img[src*="logo.png"], .menu-logo, [class*="logo"] {
+            content: url("${logoJK}") !important;
+            height: 60px !important;
+        }
+        
+        /* Ajuste do Painel de Status (Rodapé) */
+        #status-panel {
+            background: rgba(0,0,0,0.9) !important;
+            border-top: 2px solid #ff0000 !important;
+        }
+        #status-panel span { color: #ff0000 !important; }
     `;
     document.head.appendChild(styleElement);
 
-    // --- FUNÇÕES DE INTERFACE ---
-    function sendToast(text, duration = 3000) {
-        if (window.Toastify) {
-            Toastify({
-                text: text,
-                duration: duration,
-                gravity: "bottom",
-                position: "center"
-            }).showToast();
-        }
-    }
+    // --- CARREGADOR INTELIGENTE (MODIFICA O CÓDIGO FONTE) ---
+    const loadScriptJK = async (url, label) => {
+        try {
+            const response = await fetch(url);
+            let code = await response.text();
 
-    async function showSplashScreen() {
+            // SUBSTITUIÇÃO PROFUNDA (Intercepta as variáveis do autor original)
+            code = code.replace(/KhanScript/gi, "KScript"); 
+            code = code.replace(/Nickz/gi, "JK");           
+            code = code.replace(/#9a7ed9/gi, "#ff0000");   // Roxo claro -> Vermelho
+            code = code.replace(/#6a35d9/gi, "#ff0000");   // Roxo escuro -> Vermelho
+            code = code.replace(/#b288e6/gi, "#ff0000");   // Outro tom roxo
+            code = code.replace(/#140c28/gi, "#000000");   // Fundo roxo -> Preto
+            code = code.replace(/rgb\(154, 126, 217\)/gi, "rgb(255, 0, 0)");
+            
+            // Troca a URL da logo dentro do código de terceiros
+            code = code.replace(/https:\/\/raw\.githubusercontent\.com\/nickzplayerzx\/KhanScript\/main\/logo\.png/g, logoJK);
+
+            const script = document.createElement('script');
+            script.textContent = code;
+            document.head.appendChild(script);
+            console.log(`[KScript-JK] Módulo carregado e adaptado: ${label}`);
+        } catch (e) {
+            console.error(`Erro ao adaptar módulo ${label}`);
+        }
+    };
+
+    // --- TELA DE CARREGAMENTO JK ---
+    async function showSplash() {
         splashScreen.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, #330000 0%, #000000 100%);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 10000; color: white; font-family: sans-serif;
-            flex-direction: column; transition: opacity 0.5s ease;
+            background: #000; display: flex; align-items: center; justify-content: center;
+            z-index: 10001; flex-direction: column; transition: opacity 0.5s;
+            font-family: Arial, sans-serif;
         `;
         splashScreen.innerHTML = `
-            <img src="${logoUrl}" style="height:120px; filter: drop-shadow(0 0 15px #ff0000); margin-bottom: 20px;">
-            <h1 style="color:#ff0000; font-size:40px; margin:0; text-shadow: 0 0 15px #ff0000;">KSCRIPT</h1>
-            <p style="letter-spacing: 3px; font-weight: bold; color: #888;">BY JK</p>
+            <img src="${logoJK}" style="height:120px; filter: drop-shadow(0 0 15px #f00);">
+            <h1 style="color:#f00; letter-spacing:8px; margin-top:25px; font-size:45px; text-shadow: 0 0 10px #f00;">KSCRIPT</h1>
+            <p style="color:#fff; font-size:14px; letter-spacing:4px; font-weight: bold; margin-top: 5px;">BY JK</p>
+            <div style="width: 200px; height: 3px; background: #222; margin-top: 20px; border-radius: 5px; overflow: hidden;">
+                <div style="width: 50%; height: 100%; background: #f00; box-shadow: 0 0 10px #f00; animation: load 2s infinite ease-in-out;"></div>
+            </div>
+            <style> @keyframes load { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } } </style>
         `;
         document.body.appendChild(splashScreen);
-        await delay(100);
-        splashScreen.style.opacity = "1";
     }
 
-    // --- INICIALIZAÇÃO ---
-    if (!location.href.includes("khanacademy.org")) {
-        alert("Acesse a Khan Academy primeiro!");
+    // --- INÍCIO DO PROCESSO ---
+    if (!window.location.host.includes("khanacademy.org")) {
+        alert("Abra a Khan Academy primeiro!");
         return;
     }
 
-    await showSplashScreen();
+    await showSplash();
 
-    // Carregar Dependências
-    const loadScript = (url, label) => {
-        return fetch(url).then(r => r.text()).then(code => {
-            // Pequeno Hack para mudar o crédito de quem criou o menu dinamicamente
-            const modifiedCode = code.replace(/Nickz/g, "JK").replace(/KhanScript/g, "KScript");
-            eval(modifiedCode);
-            loadedPlugins.push(label);
-        }).catch(() => console.error("Falha ao carregar: " + label));
-    };
+    // Carregando dependências via Interceptor
+    await loadScriptJK('https://cdn.jsdelivr.net/npm/toastify-js', 'Notificações');
+    const toastCSS = document.createElement('link');
+    toastCSS.rel = 'stylesheet'; toastCSS.href = 'https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css';
+    document.head.appendChild(toastCSS);
 
-    // Plugins Essenciais
-    await loadScript('https://cdn.jsdelivr.net/npm/toastify-js', 'Notificações');
-    const toastStyle = document.createElement('link');
-    toastStyle.rel = 'stylesheet'; toastStyle.href = 'https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css';
-    document.head.appendChild(toastStyle);
+    // Carregando os módulos do script original com a nossa "máscara" JK
+    setTimeout(async () => {
+        await loadScriptJK(repoPathDefault + 'visuals/mainMenu.js', 'Menu Principal');
+        await loadScriptJK(repoPathDefault + 'visuals/statusPanel.js', 'Painel Status');
+        await loadScriptJK(repoPathDefault + 'functions/questionSpoof.js', 'Exploit');
+        await loadScriptJK(repoPathDefault + 'functions/answerRevealer.js', 'Revelador');
+        await loadScriptJK(repoPathDefault + 'functions/videoSpoof.js', 'AutoVideo');
 
-    // Carregando Módulos do Menu e Funções
-    await loadScript(repoPathDefault + 'visuals/mainMenu.js', 'Menu');
-    await loadScript(repoPathDefault + 'visuals/statusPanel.js', 'Stats');
-    await loadScript(repoPathDefault + 'functions/questionSpoof.js', 'Resolver');
-    await loadScript(repoPathDefault + 'functions/videoSpoof.js', 'Video');
-    await loadScript(repoPathDefault + 'functions/answerRevealer.js', 'Revealer');
-
-    // Pega o nome do usuário na Khan
-    fetch("https://pt.khanacademy.org/api/internal/graphql/getFullUserProfile", {
-        method: "POST",
-        body: '{"operationName":"getFullUserProfile","query":"query getFullUserProfile { user { nickname } }"}'
-    }).then(r => r.json()).then(d => {
-        if(d.data?.user) user.nickname = d.data.user.nickname;
-    });
-
-    // Finalização
-    setTimeout(() => {
-        splashScreen.style.opacity = "0";
-        setTimeout(() => splashScreen.remove(), 500);
-        
-        sendToast(`KScript ${ver} Carregado!`);
-        setTimeout(() => sendToast(`Bem-vindo, ${user.nickname} [JK Version]`), 1000);
-        
-        console.clear();
-        console.log("%c KSCRIPT BY JK %c Status: Online ", "background:#ff0000; color:#000; font-size:20px; font-weight:bold;", "background:#000; color:#ff0000; font-size:20px;");
-    }, 2500);
+        setTimeout(() => {
+            splashScreen.style.opacity = "0";
+            setTimeout(() => splashScreen.remove(), 600);
+            console.clear();
+            console.log("%c KSCRIPT BY JK %c STATUS: ATIVADO ", "background:#f00; color:#000; font-size:22px; font-weight:bold;", "background:#000; color:#f00; font-size:22px; border: 1px solid #f00;");
+        }, 1500);
+    }, 500);
 
 })();
